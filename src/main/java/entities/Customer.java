@@ -8,13 +8,16 @@ package entities;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
 /**
@@ -37,7 +40,13 @@ public class Customer implements Serializable {
     @Column(name="last_name", length=50)
     private String lastName;
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.PERSIST)
+   
+    @ManyToMany(cascade =
+        {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+    name="link_customer_address",
+    joinColumns=@JoinColumn(name="customer_id", referencedColumnName="customer_id"),
+    inverseJoinColumns=@JoinColumn(name="address_id", referencedColumnName="address_id"))
     private List<Address> addresses = new ArrayList();
 
     public List<Address> getAddresses() {
@@ -49,8 +58,10 @@ public class Customer implements Serializable {
     }
     
     public void addAdresses(Address address){
-        addresses.add(address);
-        address.setCustomer(this);
+       
+             addresses.add(address);
+             address.addCustomers(this);
+        
     }
     
     public Long getId() {
@@ -85,4 +96,31 @@ public class Customer implements Serializable {
         this.lastName = lastName;
     }
 
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 47 * hash + Objects.hashCode(this.id);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Customer other = (Customer) obj;
+        if (!Objects.equals(this.id, other.id)) {
+            return false;
+        }
+        return true;
+    }
+
+    
+    
 }
